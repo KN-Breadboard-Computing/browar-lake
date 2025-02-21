@@ -1,0 +1,58 @@
+CAPI=2:
+name: bbcomp:browarlake:cpu:1.0.0
+description: Browar Lake CPU
+
+filesets:
+    src:
+        files:
+            - cpu/src/cpu.sv
+        file_type: systemVerilogSource
+    wb_src:
+        files:
+            - cpu/src/cpu_wb.sv
+        file_type: systemVerilogSource
+        depend:
+            - ">=bbcomp:browarlake:mru:1.0.0"
+            - ">=bbcomp:browarlake:fetch:1.0.0"
+    wb_tb:
+        files:
+            - cpu/tb/cpu_wb_tb.sv
+        depend:
+            - ">=bbcomp:browarlake:mem:1.0.0"
+        file_type: systemVerilogSource
+
+    wb_sys_tb:
+        files:
+            - cpu/tb/wb_sys_tb.sv
+        depend:
+            - ">=bbcomp:browarlake:mem:1.0.0"
+        file_type: systemVerilogSource
+
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: cpu
+    sim:
+        <<: *default
+        description: Simulate the design using iverilog
+        default_tool: icarus
+        filesets_append:
+            - wb_tb
+        toplevel: wb_tb
+        tools:
+            icarus:
+                iverilog_options:
+                    - -g2005-sv
+        parameters: []
+    wb_sim:
+        <<: *default
+        description: Simulate Whishbone system testbench
+        filesets_append: [ wb_src, wb_sys_tb ]
+        toplevel: wb_sys_tb
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+                - -DMEM_PRELOAD

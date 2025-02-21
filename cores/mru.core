@@ -1,0 +1,53 @@
+CAPI=2:
+name: bbcomp:browarlake:mru:1.0.0
+description: Memory Request Unit - bridge between the CPU and Wishbone enabled memory
+
+filesets:
+    src:
+        files:
+            - mru/src/mru.sv
+        file_type: systemVerilogSource
+    sim:
+        files:
+            - mru/tb/sim.sv
+        file_type: systemVerilogSource
+        depend: [">=bbcomp:browarlake:mem:1.0.0"]
+    test:
+        files:
+            - mru/tb/coco_tests.py: { file_type: user, copyto: . }
+            - mru/tb/mru_coco_wrapper.sv: { file_type: systemVerilogSource }
+        depend:
+            - vlog_tb_utils
+            - ">=bbcomp:browarlake:mem:1.0.0"
+
+targets:
+    default: &default
+        filesets:
+            - src
+    sim:
+        <<: *default
+        description: Simulate the design using iverilog
+        default_tool: icarus
+        filesets_append:
+            - sim
+        toplevel: sim
+        tools:
+            icarus:
+                iverilog_options:
+                    - -g2005-sv
+        parameters: []
+    test:
+        <<: *default
+        filesets_append:
+            - test
+        description: Run cocotb unit tests
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+            cocotb_module: coco_tests
+            timescale: 1ns/1ns
+            vcs_options: [-timescale=1ns/1ns]
+        toplevel: mru_coco_wrapper
+        parameters: []

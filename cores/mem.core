@@ -1,0 +1,15 @@
+CAPI=2:
+name: bbcomp:browarlake:mem:1.0.0
+description: Memory Controller for the Browar Lake CPU
+
+filesets:
+    src:
+        files:
+            - mem/src/mem.sv
+        file_type: systemVerilogSource
+
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: cpu
