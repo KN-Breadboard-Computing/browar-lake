@@ -1,0 +1,43 @@
+CAPI=2:
+name: bbcomp:browarlake:decode:1.0.0
+description: Decode Unit
+filesets:
+    src:
+        files:
+            - decode/src/decode.sv
+            - include/opcodes.svh: { is_include_file: true }
+        file_type: systemVerilogSource
+    test:
+        files:
+            - decode/tb/decode_coco_wrapper.sv: { file_type: systemVerilogSource }
+            - decode/tb/coco_tests.py: { file_type: user, copyto: . }
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: decode
+    test:
+        <<: *default
+        description: Run cocotb unit tests
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+            cocotb_module: coco_tests
+            timescale: 1ns/1ns
+            vcs_options: [-timescale=1ns/1ns]
+        filesets_append:
+            - test
+        toplevel: decode_coco_wrapper
+        parameters: []
+    lint:
+        <<: *default
+        description: Run verilator lint
+        flow: lint
+        toplevel: decode
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
+        parameters: []

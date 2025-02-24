@@ -1,3 +1,5 @@
+`include "opcodes.svh"
+
 module fetch(
     input wire cpu_clk,
     input wire cpu_rst,
@@ -13,13 +15,6 @@ module fetch(
     output wire ins_en,
     output wire [15:0] ext
 );
-
-`define EXT(sig) sig[15]
-`define OPCODE(sig) sig[14:10]
-`define OPCODE_JMPIMM 5'b11110
-`define OPCODE_JMP 5'b11111
-`define OPCODE_BN 5'b11100
-`define OPCODE_B 5'b11101
 
 reg active_buf;
 reg [15:0] a_mbufa;
