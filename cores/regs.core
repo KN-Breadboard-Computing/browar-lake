@@ -1,0 +1,45 @@
+CAPI=2:
+name: bbcomp:browarlake:regs:1.0.0
+description: Register File
+
+filesets:
+    src:
+        files:
+            - regs/src/regs.sv
+        file_type: systemVerilogSource
+    test:
+        files:
+            - regs/tb/coco_tests.py: { file_type: user, copyto: . }
+            #- regs/tb/regs_coco_wrapper.sv: { file_type: systemVerilogSource }
+        depend: [vlog_tb_utils]
+
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: regs
+    test:
+        <<: *default
+        description: Run cocotb unit tests
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+            cocotb_module: coco_tests
+            timescale: 1ns/1ns
+            vcs_options: [-timescale=1ns/1ns]
+        filesets_append:
+            - test
+        toplevel: regs
+        parameters: []
+    lint:
+        <<: *default
+        description: Run verilator lint
+        flow: lint
+        toplevel: regs
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
+        parameters: []
