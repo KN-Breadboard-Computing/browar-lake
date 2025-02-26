@@ -7,6 +7,7 @@ module fetch(
     input wire ins_res,
     input wire pc_en,
     input wire pc_add,
+    input wire pc_inc,
     input wire [31:0] data,
     input wire [30:0] pc,
     output wire ins_req,
@@ -36,6 +37,8 @@ reg pending_jmp;
 reg jmping_a;
 reg jmping_b;
 reg req_made;
+reg jmp_stall;
+reg branching;
 
 always_ff @(posedge cpu_clk) begin
     if (cpu_rst) begin
@@ -51,6 +54,8 @@ always_ff @(posedge cpu_clk) begin
         jmping_a <= 1'b0;
         jmping_b <= 1'b0;
         req_made <= 1'b0;
+        jmp_stall <= 1'b0;
+        branching <= 1'b0;
     end
 end
 
@@ -131,103 +136,115 @@ always_ff @(posedge cpu_clk) begin
     if (!(jmping_a || jmping_b)) begin
         if (use_a) begin
             if (a_state[0] || a_state[1]) begin
-                jmping_a <= (`OPCODE(a_mbufa) == `OPCODE_JMP || 
-                             `OPCODE(a_mbufa) == `OPCODE_BN ||
-                             `OPCODE(a_mbufa) == `OPCODE_B);
+                jmping_a <= (`OPCODE(a_mbufa) == `OPCODE_JMP);
                 jmping_b <= !`EXT(a_mbufa) && 
-                            (`OPCODE(a_mbufb) == `OPCODE_JMP ||
-                             `OPCODE(a_mbufb) == `OPCODE_BN ||
-                             `OPCODE(a_mbufb) == `OPCODE_B);
+                            (`OPCODE(a_mbufb) == `OPCODE_JMP);
             end
         end else begin
             if (b_state[0] || b_state[1]) begin
-                jmping_a <= (`OPCODE(b_mbufa) == `OPCODE_JMP || 
-                             `OPCODE(b_mbufa) == `OPCODE_BN ||
-                             `OPCODE(b_mbufa) == `OPCODE_B);
+                jmping_a <= (`OPCODE(b_mbufa) == `OPCODE_JMP);
                 jmping_b <= !`EXT(b_mbufa) && 
-                            (`OPCODE(b_mbufb) == `OPCODE_JMP ||
-                             `OPCODE(b_mbufb) == `OPCODE_BN ||
-                             `OPCODE(b_mbufb) == `OPCODE_B);
+                            (`OPCODE(b_mbufb) == `OPCODE_JMP);
             end
         end
     end
 
-    if (use_a && a_state[0]) begin
-        if (`EXT(a_mbufa)) begin
-            ins_buf <= a_mbufa;
-            ins_valid <= 1'b1;
-            ext_buf <= a_mbufb;
-            ext_valid <= 1'b1;
-            a_state <= 2'b00;
-            use_a <= 1'b0;
-        end else begin
-            ins_buf <= a_mbufa;
-            ins_valid <= 1'b1;
-            ext_valid <= 1'b0;
-            a_state[0] <= 1'b0;
-            if (jmping_a || jmping_b) begin
-                a_state[1] <= 1'b0;
+    if (!branching) begin
+        if (use_a) begin
+            if (a_state[0] || a_state[1]) begin
+                branching <= (`OPCODE(a_mbufa) == `OPCODE_BN || `OPCODE(a_mbufb) == `OPCODE_BN);
             end
-            use_a <= a_state[1];
+        end else begin
+            if (b_state[0] || b_state[1]) begin
+                branching <= (`OPCODE(b_mbufa) == `OPCODE_BN || `OPCODE(b_mbufb) == `OPCODE_BN);
+            end
         end
-    end else if (use_a && a_state[1]) begin
-        if (`EXT(a_mbufb)) begin
-            if (b_state[0]) begin
-                ins_buf <= a_mbufb;
+    end
+
+
+    if (!jmp_stall) begin
+        if (jmping_a || jmping_b) jmp_stall <= 1'b1;
+
+        if (use_a && a_state[0]) begin
+            if (`EXT(a_mbufa)) begin
+                ins_buf <= a_mbufa;
                 ins_valid <= 1'b1;
-                ext_buf <= b_mbufa;
+                ext_buf <= a_mbufb;
                 ext_valid <= 1'b1;
                 a_state <= 2'b00;
-                if (jmping_a || jmping_b) b_state <= 2'b00;
-                else b_state[0] <= 1'b0;
                 use_a <= 1'b0;
+            end else begin
+                ins_buf <= a_mbufa;
+                ins_valid <= 1'b1;
+                ext_valid <= 1'b0;
+                a_state[0] <= 1'b0;
+                if (jmping_a || jmping_b) begin
+                    a_state[1] <= 1'b0;
+                end
+                use_a <= a_state[1];
             end
-        end else begin
-            ins_buf <= a_mbufb;
-            ins_valid <= 1'b1;
-            ext_valid <= 1'b0;
-            a_state <= 2'b00;
-            if (jmping_a) begin 
+        end else if (use_a && a_state[1]) begin
+            if (`EXT(a_mbufb)) begin
+                if (b_state[0]) begin
+                    ins_buf <= a_mbufb;
+                    ins_valid <= 1'b1;
+                    ext_buf <= b_mbufa;
+                    ext_valid <= 1'b1;
+                    a_state <= 2'b00;
+                    if (jmping_a || jmping_b) b_state <= 2'b00;
+                    else b_state[0] <= 1'b0;
+                    use_a <= 1'b0;
+                end
+            end else begin
+                ins_buf <= a_mbufb;
+                ins_valid <= 1'b1;
+                ext_valid <= 1'b0;
+                a_state <= 2'b00;
+                if (jmping_a) begin 
+                    b_state <= 2'b00;
+                    use_a <= 1'b1;
+                end else use_a <= 1'b0;
+            end
+        end else if (b_state[0]) begin
+            if (`EXT(b_mbufa)) begin
+                ins_buf <= b_mbufa;
+                ins_valid <= 1'b1;
+                ext_buf <= b_mbufb;
+                ext_valid <= 1'b1;
                 b_state <= 2'b00;
                 use_a <= 1'b1;
-            end else use_a <= 1'b0;
-        end
-    end else if (b_state[0]) begin
-        if (`EXT(b_mbufa)) begin
-            ins_buf <= b_mbufa;
-            ins_valid <= 1'b1;
-            ext_buf <= b_mbufb;
-            ext_valid <= 1'b1;
-            b_state <= 2'b00;
-            use_a <= 1'b1;
-        end else begin
-            ins_buf <= b_mbufa;
-            ins_valid <= 1'b1;
-            ext_valid <= 1'b0;
-            b_state[0] <= 1'b0;
-            if (jmping_a || jmping_b) begin
-                b_state[1] <= 1'b0;
-                use_a <= 1'b1;
+            end else begin
+                ins_buf <= b_mbufa;
+                ins_valid <= 1'b1;
+                ext_valid <= 1'b0;
+                b_state[0] <= 1'b0;
+                if (jmping_a || jmping_b) begin
+                    b_state[1] <= 1'b0;
+                    use_a <= 1'b1;
+                end
             end
-        end
-    end else if (b_state[1]) begin
-        if (`EXT(b_mbufb)) begin
-            if (a_state[0]) begin
+        end else if (b_state[1]) begin
+            if (`EXT(b_mbufb)) begin
+                if (a_state[0]) begin
+                    ins_buf <= b_mbufb;
+                    ins_valid <= 1'b1;
+                    ext_buf <= a_mbufa;
+                    if (jmping_a || jmping_b) a_state <= 2'b00;
+                    else a_state[0] <= 1'b0;
+                    b_state <= 2'b00;
+                    use_a <= 1'b1;
+                end
+            end else begin
                 ins_buf <= b_mbufb;
                 ins_valid <= 1'b1;
-                ext_buf <= a_mbufa;
-                if (jmping_a || jmping_b) a_state <= 2'b00;
-                else a_state[0] <= 1'b0;
+                ext_valid <= 1'b0;
                 b_state <= 2'b00;
                 use_a <= 1'b1;
+                if (jmping_a) a_state <= 2'b00;
             end
         end else begin
-            ins_buf <= b_mbufb;
-            ins_valid <= 1'b1;
+            ins_valid <= 1'b0;
             ext_valid <= 1'b0;
-            b_state <= 2'b00;
-            use_a <= 1'b1;
-            if (jmping_a) a_state <= 2'b00;
         end
     end else begin
         ins_valid <= 1'b0;
@@ -238,19 +255,34 @@ end
 
 always_ff @(posedge cpu_clk) begin
     if (!cpu_rst) begin
-    if ((jmping_a || jmping_b) && (pc_en || pc_add)) begin
-        if (pc_en) begin
-            // TODO: word aligned jumps
-            ip <= pc[30:1];
-            jmping_a <= 1'b0;
-            jmping_b <= 1'b0;
+        if ((jmping_a || jmping_b) && (pc_en || pc_add || pc_inc)) begin
+            if (pc_en) begin
+                // TODO: word aligned jumps
+                ip <= pc[30:1];
+                jmping_a <= 1'b0;
+                jmping_b <= 1'b0;
+                branching <= 1'b0;
+                use_a <= 1'b1;
+                a_state <= 2'b00;
+                b_state <= 2'b00;
+            end
+            if (pc_add) begin
+                ip <= ip + { {14{pc[15]}}, pc[15:0] };
+                jmping_a <= 1'b0;
+                jmping_b <= 1'b0;
+                branching <= 1'b0;
+                use_a <= 1'b1;
+                a_state <= 2'b00;
+                b_state <= 2'b00;
+            end
+            if (pc_inc) begin
+                ip <= ip + { 28'h0000, 1'b1 };
+                jmping_a <= 1'b0;
+                jmping_b <= 1'b0;
+                branching <= 1'b0;
+            end
+            jmp_stall <= 1'b0;
         end
-        if (pc_add) begin
-            ip <= ip + { {14{pc[15]}}, pc[15:0] };
-            jmping_a <= 1'b0;
-            jmping_b <= 1'b0;
-        end
-    end
     end
 end
 

@@ -14,6 +14,9 @@ filesets:
         depend:
             - ">=bbcomp:browarlake:mru:1.0.0"
             - ">=bbcomp:browarlake:fetch:1.0.0"
+            - ">=bbcomp:browarlake:decode:1.0.0"
+            - ">=bbcomp:browarlake:read:1.0.0"
+            - ">=bbcomp:browarlake:regs:1.0.0"
     wb_tb:
         files:
             - cpu/tb/cpu_wb_tb.sv
@@ -45,6 +48,16 @@ targets:
                 iverilog_options:
                     - -g2005-sv
         parameters: []
+    wb_lint:
+        <<: *default
+        description: Lint Wishbone system with verilator
+        filesets_append: [ wb_src ]
+        toplevel: cpu_wb
+        flow: lint
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
     wb_sim:
         <<: *default
         description: Simulate Whishbone system testbench
@@ -56,3 +69,4 @@ targets:
             iverilog_options:
                 - -g2005-sv
                 - -DMEM_PRELOAD
+                - -DREG_PRELOAD

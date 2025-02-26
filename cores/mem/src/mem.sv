@@ -47,9 +47,9 @@ initial begin
     bank1[4] = 8'h78;
     bank2[4] = 8'hC6;
     bank3[4] = 8'h63;
-
-    bank0[16] = 8'h0C;
-    bank1[16] = 8'h7C;
+// 0x7E6C
+    bank0[16] = 8'h6C;
+    bank1[16] = 8'h7E;
     bank2[16] = 8'hA6;
     bank3[16] = 8'h65;
 
@@ -62,6 +62,21 @@ initial begin
     bank1[18] = 8'h00;
     bank2[18] = 8'h00;
     bank3[18] = 8'h00;
+
+    bank0[64] = 8'h8E;
+    bank1[64] = 8'h74; // b.gez r2, r3
+    bank2[64] = 8'hC6;
+    bank3[64] = 8'h63;
+    
+    bank0[65] = 8'hC6;
+    bank1[65] = 8'h63;
+    bank2[65] = 8'hE6;
+    bank3[65] = 8'h67;
+
+    bank0[66] = 8'hA6;
+    bank1[66] = 8'h65;
+    bank2[66] = 8'h46;
+    bank3[66] = 8'h62;
 end
 `endif
 

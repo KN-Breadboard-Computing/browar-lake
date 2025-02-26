@@ -3,7 +3,8 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, NextTimeStep
 
 async def test_decode(dut, ins, ext=None, *, 
-                      read_a, imm5_a, arg_a, read_b, src_b, set_pc, add_pc, cmp_b):
+                      read_a, imm5_a, arg_a, read_b, src_b, set_pc, 
+                      add_pc, inc_pc, cmp_b, pc_src, out_regs):
     clk_cpu = Clock(dut.cpu_clk, 4, 'ns')
     await cocotb.start(clk_cpu.start())
 
@@ -25,7 +26,10 @@ async def test_decode(dut, ins, ext=None, *,
     assert dut.src_b.value == src_b
     assert dut.set_pc.value == set_pc
     assert dut.add_pc.value == add_pc
+    assert dut.inc_pc.value == inc_pc
     assert dut.cmp_b.value == cmp_b
+    assert dut.pc_src.value == pc_src
+    assert dut.out_regs.value == out_regs
 
 
 @cocotb.test
@@ -38,10 +42,14 @@ async def reset_works(dut):
                       src_b=0,
                       set_pc=0,
                       add_pc=0,
-                      cmp_b=0)
+                      inc_pc=0,
+                      cmp_b=0,
+                      pc_src=0,
+                      out_regs=0)
 
 @cocotb.test
 async def jmpimm_works(dut):
+    # jmpimm
     await test_decode(dut, 0x7B99, 
                       read_a=0,
                       imm5_a=0,
@@ -50,7 +58,11 @@ async def jmpimm_works(dut):
                       src_b=0,
                       set_pc=0,
                       add_pc=0,
-                      cmp_b=0)
+                      inc_pc=0,
+                      cmp_b=0,
+                      pc_src=0,
+                      out_regs=0)
+    # jmpimm.ext
     await test_decode(dut, 0x7B99, 0xDEAD, 
                       read_a=0,
                       imm5_a=0,
@@ -59,7 +71,10 @@ async def jmpimm_works(dut):
                       src_b=0,
                       set_pc=0,
                       add_pc=0,
-                      cmp_b=0)
+                      inc_pc=0,
+                      cmp_b=0,
+                      pc_src=0,
+                      out_regs=0)
 
 @cocotb.test
 async def jmp_works(dut):
@@ -71,10 +86,14 @@ async def jmp_works(dut):
                       src_b=0x09,
                       set_pc=1,
                       add_pc=0,
-                      cmp_b=0)
+                      inc_pc=0,
+                      cmp_b=0,
+                      pc_src=0b11,
+                      out_regs=0b00)
 
 @cocotb.test
 async def bn_works(dut):
+    # bn src, simm5, f1
     # bn.z
     await test_decode(dut, 0x719E,
                       read_a=0,
@@ -84,7 +103,10 @@ async def bn_works(dut):
                       src_b=0x06,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b001)
+                      inc_pc=1,
+                      cmp_b=0b001,
+                      pc_src=0b01,
+                      out_regs=0b00)
     # bn.nz
     await test_decode(dut, 0x71BF,
                       read_a=0,
@@ -94,10 +116,14 @@ async def bn_works(dut):
                       src_b=0x06,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b011)
+                      inc_pc=1,
+                      cmp_b=0b011,
+                      pc_src=0b01,
+                      out_regs=0b00)
 
 @cocotb.test
 async def b_works(dut):
+    # b src, tgt, f2
     # b.z
     await test_decode(dut, 0x75D8,
                       read_a=1,
@@ -107,7 +133,10 @@ async def b_works(dut):
                       src_b=0x07,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b001)
+                      inc_pc=1,
+                      cmp_b=0b001,
+                      pc_src=0b01,
+                      out_regs=0b00)
     # b.nz
     await test_decode(dut, 0x75D9,
                       read_a=1,
@@ -117,7 +146,10 @@ async def b_works(dut):
                       src_b=0x07,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b011)
+                      inc_pc=1,
+                      cmp_b=0b011,
+                      pc_src=0b01,
+                      out_regs=0b00)
     # b.gtz
     await test_decode(dut, 0x75DA,
                       read_a=1,
@@ -127,7 +159,10 @@ async def b_works(dut):
                       src_b=0x07,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b101)
+                      inc_pc=1,
+                      cmp_b=0b101,
+                      pc_src=0b01,
+                      out_regs=0b00)
     # b.ltz
     await test_decode(dut, 0x75DB,
                       read_a=1,
@@ -137,4 +172,22 @@ async def b_works(dut):
                       src_b=0x07,
                       set_pc=0,
                       add_pc=1,
-                      cmp_b=0b111)
+                      inc_pc=1,
+                      cmp_b=0b111,
+                      pc_src=0b01,
+                      out_regs=0b00)
+
+@cocotb.test
+async def test_default_case(dut):
+    await test_decode(dut, 0x6A56, 
+                      read_a=0,
+                      imm5_a=0,
+                      arg_a=0,
+                      read_b=0,
+                      src_b=0,
+                      set_pc=0,
+                      add_pc=0,
+                      inc_pc=0,
+                      cmp_b=0,
+                      pc_src=0,
+                      out_regs=0)

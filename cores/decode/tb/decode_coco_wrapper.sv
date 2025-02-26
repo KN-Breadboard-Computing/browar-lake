@@ -11,7 +11,10 @@ module decode_coco_wrapper(
     output logic [3:0] src_b,
     output logic set_pc,
     output logic add_pc,
-    output logic [2:0] cmp_b
+    output logic inc_pc,
+    output logic [1:0] pc_src,
+    output logic [2:0] cmp_b,
+    output logic [2:0] out_regs
 );
 
 decode dut(
@@ -27,7 +30,10 @@ decode dut(
     .src_b(src_b),
     .set_pc(set_pc),
     .add_pc(add_pc),
-    .cmp_b(cmp_b)
+    .inc_pc(inc_pc),
+    .pc_src(pc_src),
+    .cmp_b(cmp_b),
+    .out_regs(out_regs)
 );
 
 initial begin

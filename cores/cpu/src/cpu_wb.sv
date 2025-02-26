@@ -57,6 +57,11 @@ wire [15:0] dec_in;
 wire [15:0] dec_ext;
 wire dec_en;
 
+wire [30:0] pc_bus;
+wire pc_add;
+wire pc_set;
+wire pc_inc;
+
 fetch fetch(
     .cpu_clk(cpu_clk),
     .cpu_rst(cpu_rst),
@@ -67,7 +72,95 @@ fetch fetch(
     .addr(ins_addr),
     .ins(dec_in),
     .ins_en(dec_en),
-    .ext(dec_ext)
+    .ext(dec_ext),
+    .pc_en(pc_set),
+    .pc_add(pc_add),
+    .pc_inc(pc_inc),
+    .pc(pc_bus)
+);
+
+wire sig_read_a;
+wire sig_imm5_a;
+wire sig_read_b;
+wire sig_pc_set;
+wire sig_pc_add;
+wire sig_pc_inc;
+wire [1:0] sig_pc_src;
+wire [1:0] sig_out_regs;
+wire [2:0] sig_cmp_b;
+wire [4:0] sig_arg_a;
+wire [3:0] sig_arg_b;
+
+decode decode(
+    .cpu_clk(cpu_clk),
+    .cpu_rst(cpu_rst),
+    .ins(dec_in),
+    .ins_en(dec_en),
+    .ext(dec_ext),
+    .read_a(sig_read_a),
+    .imm5_a(sig_imm5_a),
+    .arg_a(sig_arg_a),
+    .read_b(sig_read_b),
+    .src_b(sig_arg_b),
+    .pc_src(sig_pc_src),
+    .set_pc(sig_pc_set),
+    .add_pc(sig_pc_add),
+    .inc_pc(sig_pc_inc),
+    .cmp_b(sig_cmp_b),
+    .out_regs(sig_out_regs)
+);
+
+wire reg_a_read;
+wire reg_b_read;
+wire [3:0] reg_a;
+wire [3:0] reg_b;
+wire [15:0] reg_a_out;
+wire [15:0] reg_b_out;
+
+read read(
+    .cpu_clk(cpu_clk),
+    .cpu_rst(cpu_rst),
+    .read_a(sig_read_a),
+    .imm5_a(sig_imm5_a),
+    .arg_a(sig_arg_a),
+    .read_b(sig_read_b),
+    .arg_b(sig_arg_b),
+    .cmp_b(sig_cmp_b),
+    .pc_set(sig_pc_set),
+    .pc_add(sig_pc_add),
+    .pc_inc(sig_pc_inc),
+    .pc_src(sig_pc_src),
+
+    .reg_a_value(reg_a_out),
+    .reg_b_value(reg_b_out),
+    .reg_a_read(reg_a_read),
+    .reg_a(reg_a),
+    .reg_b_read(reg_b_read),
+    .reg_b(reg_b),
+
+    .src_a_en(),
+    .src_a(),
+    .src_b_en(),
+    .src_b(),
+
+    .o_pc_set(pc_set),
+    .o_pc_add(pc_add),
+    .o_pc_inc(pc_inc),
+    .pc(pc_bus)
+);
+
+regs regs(
+    .cpu_clk(cpu_clk),
+    .src_a_en(reg_a_read),
+    .src_a_pop(1'b0),
+    .src_a(reg_a),
+    .src_b_en(reg_b_read),
+    .src_b(reg_b),
+    .we(1'b0),
+    .src_w(4'b0),
+    .val(16'h0000),
+    .a_out(reg_a_out),
+    .b_out(reg_b_out)
 );
 
 endmodule
