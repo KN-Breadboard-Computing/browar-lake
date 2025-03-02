@@ -1,0 +1,56 @@
+CAPI=2:
+name: bbcomp:browarlake:adder:1.0.0
+description: Adder ALU datapath
+
+filesets:
+    src:
+        files:
+            - adder/src/sklansky.sv
+            - adder/src/adder.sv
+        file_type: systemVerilogSource
+    formal:
+        files:
+            - adder/formal/formal_tb.sv: { file_type: systemVerilogSource }
+            - adder/formal/sklansky.sby: { file_type: sbyConfigTemplate }
+    test:
+        files:
+            - fetch/tb/coco_tests.py: { file_type: user, copyto: . }
+            - fetch/tb/fetch_coco_wrapper.sv: { file_type: systemVerilogSource }
+
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: adder
+    test:
+        <<: *default
+        description: Run cocotb unit tests
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+            cocotb_module: coco_tests
+            timescale: 1ns/1ns
+            vcs_options: [-timescale=1ns/1ns]
+        filesets_append:
+            - test
+        parameters: []
+    lint:
+        <<: *default
+        description: Run verilator lint
+        flow: lint
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
+        parameters: []
+    formal:
+        <<: *default
+        description: Run formal verification
+        default_tool: symbiyosys
+        filesets_append:
+            - formal
+        tools:
+            symbiyosys:
+                tasknames: [ "formal" ]

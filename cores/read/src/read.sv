@@ -1,9 +1,10 @@
 module read(
     input wire cpu_clk,
     input wire cpu_rst,
+    input wire imm_en,
+    input wire [4:0] arg_imm,
     input wire read_a,
-    input wire imm5_a,
-    input wire [4:0] arg_a,
+    input wire [3:0] arg_a,
     input wire read_b,
     input wire [3:0] arg_b,
     input wire [2:0] cmp_b,
@@ -11,6 +12,12 @@ module read(
     input wire pc_add,
     input wire pc_inc,
     input wire [1:0] pc_src,
+    input wire [1:0] en_regs,
+
+    input wire i_alu_en,
+    input wire [3:0] i_truth_table,
+    input wire [4:0] i_alu_op,
+    input wire sh_off_imm,
 
     input wire [15:0] reg_a_value,
     input wire [15:0] reg_b_value,
@@ -27,7 +34,12 @@ module read(
     output logic o_pc_set,
     output logic o_pc_add,
     output logic o_pc_inc,
-    output logic [30:0] pc
+    output logic [30:0] pc,
+
+    output logic o_alu_en,
+    output logic [3:0] o_truth_table,
+    output logic [4:0] o_alu_op,
+    output logic [3:0] sh_off
 );
 
 assign reg_a_read = read_a;
@@ -45,11 +57,34 @@ assign b_zero = reg_b_value[0] | reg_b_value[1] | reg_b_value[2] | reg_b_value[3
 assign b_neg = reg_b_value[15];
 assign cond = (cmp_b[2] ? (~b_neg ^ cmp_b[1]) : (~b_zero ^ cmp_b[1]));
 
-assign pc_lo = pc_src[0] ? (read_a ? reg_a_value[15:1] : (imm5_a ? { {10{arg_a[4]}}, arg_a } : 15'h0)) : 15'h0;
+assign pc_lo = pc_src[0] ? (read_a ? reg_a_value[15:1] : (imm_en ? { {10{arg_imm[4]}}, arg_imm } : 15'h0)) : 15'h0;
 assign pc_hi = pc_src[1] ? reg_b_value : { 16{pc_lo[14]} };
 assign pc = { pc_hi, pc_lo };
 assign o_pc_set = pc_set & (~cmp_b[0] | cond);
 assign o_pc_add = pc_add & (~cmp_b[0] | cond);
 assign o_pc_inc = pc_inc & (~cmp_b[0] | ~cond);
+
+always_ff @(posedge cpu_clk) begin
+    if (!cpu_rst) begin
+        if (read_a) begin
+            src_a <= reg_a_value;
+            src_a_en <= en_regs[0];
+        end
+        if (read_b) begin
+            src_b <= reg_b_value;
+            src_b_en <= en_regs[1];
+        end
+    end
+end
+
+always_ff @(posedge cpu_clk) begin
+    if (!cpu_rst) begin
+        o_alu_en <= i_alu_en;
+        o_truth_table <= i_truth_table;
+        o_alu_op <= i_alu_op;
+        if (sh_off_imm) sh_off <= arg_imm[3:0];
+        else sh_off <= reg_a_value[3:0];
+    end
+end
 
 endmodule

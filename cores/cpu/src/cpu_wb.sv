@@ -85,11 +85,17 @@ wire sig_read_b;
 wire sig_pc_set;
 wire sig_pc_add;
 wire sig_pc_inc;
+wire sig_imm_en;
+wire sig_alu_en;
+wire sig_sh_off_imm;
 wire [1:0] sig_pc_src;
-wire [1:0] sig_out_regs;
+wire [1:0] sig_en_regs;
 wire [2:0] sig_cmp_b;
-wire [4:0] sig_arg_a;
+wire [3:0] sig_arg_a;
 wire [3:0] sig_arg_b;
+wire [3:0] sig_truth_table;
+wire [4:0] sig_arg_imm;
+wire [4:0] sig_alu_op;
 
 decode decode(
     .cpu_clk(cpu_clk),
@@ -97,8 +103,9 @@ decode decode(
     .ins(dec_in),
     .ins_en(dec_en),
     .ext(dec_ext),
+    .imm_en(sig_imm_en),
+    .arg_imm(sig_arg_imm),
     .read_a(sig_read_a),
-    .imm5_a(sig_imm5_a),
     .arg_a(sig_arg_a),
     .read_b(sig_read_b),
     .src_b(sig_arg_b),
@@ -107,9 +114,17 @@ decode decode(
     .add_pc(sig_pc_add),
     .inc_pc(sig_pc_inc),
     .cmp_b(sig_cmp_b),
-    .out_regs(sig_out_regs)
+    .out_regs(sig_en_regs),
+    .alu_en(sig_alu_en),
+    .sh_off_imm(sig_sh_off_imm),
+    .truth_table(sig_truth_table),
+    .alu_op(sig_alu_op)
 );
 
+wire exe_a_en;
+wire exe_b_en;
+wire [15:0] exe_a_bus;
+wire [15:0] exe_b_bus;
 wire reg_a_read;
 wire reg_b_read;
 wire [3:0] reg_a;
@@ -120,8 +135,9 @@ wire [15:0] reg_b_out;
 read read(
     .cpu_clk(cpu_clk),
     .cpu_rst(cpu_rst),
+    .imm_en(sig_imm_en),
+    .arg_imm(sig_arg_imm),
     .read_a(sig_read_a),
-    .imm5_a(sig_imm5_a),
     .arg_a(sig_arg_a),
     .read_b(sig_read_b),
     .arg_b(sig_arg_b),
@@ -130,6 +146,7 @@ read read(
     .pc_add(sig_pc_add),
     .pc_inc(sig_pc_inc),
     .pc_src(sig_pc_src),
+    .en_regs(sig_en_regs),
 
     .reg_a_value(reg_a_out),
     .reg_b_value(reg_b_out),
@@ -138,15 +155,25 @@ read read(
     .reg_b_read(reg_b_read),
     .reg_b(reg_b),
 
-    .src_a_en(),
-    .src_a(),
-    .src_b_en(),
-    .src_b(),
+    .i_alu_en(sig_alu_en),
+    .i_truth_table(sig_truth_table),
+    .i_alu_op(sig_alu_op),
+    .sh_off_imm(sig_sh_off_imm),
+
+    .src_a_en(exe_a_en),
+    .src_a(exe_a_bus),
+    .src_b_en(exe_b_en),
+    .src_b(exe_b_bus),
 
     .o_pc_set(pc_set),
     .o_pc_add(pc_add),
     .o_pc_inc(pc_inc),
-    .pc(pc_bus)
+    .pc(pc_bus),
+
+    .o_alu_en(alu_en),
+    .o_truth_table(alu_truth_table),
+    .o_alu_op(alu_op),
+    .sh_off(alu_sh_off)
 );
 
 regs regs(
@@ -161,6 +188,23 @@ regs regs(
     .val(16'h0000),
     .a_out(reg_a_out),
     .b_out(reg_b_out)
+);
+
+wire alu_en;
+wire [3:0] alu_sh_off;
+wire [3:0] alu_truth_table;
+wire [4:0] alu_op;
+wire [15:0] alu_out;
+
+alu alu(
+    .a(exe_a_bus),
+    .b(exe_b_bus),
+    .sh_off(alu_sh_off),
+    .truth_table(alu_truth_table),
+    .op(alu_op),
+    .flag_carry(),
+    .flag_overflow(),
+    .out(alu_out)
 );
 
 endmodule

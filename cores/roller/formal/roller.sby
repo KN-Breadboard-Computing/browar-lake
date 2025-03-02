@@ -1,0 +1,17 @@
+[tasks]
+formal: bmc
+
+[options]
+bmc:
+mode bmc
+depth 2
+
+[engines]
+smtbmc --syn yices
+
+[script]
+{{"-sv"|gen_reads}}
+prep -top formal_tb
+
+[files]
+{{files}}

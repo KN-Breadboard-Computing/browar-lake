@@ -10,13 +10,14 @@ filesets:
     wb_src:
         files:
             - cpu/src/cpu_wb.sv
-        file_type: systemVerilogSource
+        file_type: systemVerilogSource 
         depend:
             - ">=bbcomp:browarlake:mru:1.0.0"
             - ">=bbcomp:browarlake:fetch:1.0.0"
             - ">=bbcomp:browarlake:decode:1.0.0"
             - ">=bbcomp:browarlake:read:1.0.0"
             - ">=bbcomp:browarlake:regs:1.0.0"
+            - ">=bbcomp:browarlake:alu:1.0.0"
     wb_tb:
         files:
             - cpu/tb/cpu_wb_tb.sv

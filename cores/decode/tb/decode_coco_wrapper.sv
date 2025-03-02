@@ -4,9 +4,10 @@ module decode_coco_wrapper(
     input wire [15:0] ins,
     input wire ins_en,
     input wire [15:0] ext,
+    output logic imm_en,
+    output logic [4:0] arg_imm,
     output logic read_a,
-    output logic imm5_a,
-    output logic [4:0] arg_a,
+    output logic [3:0] arg_a,
     output logic read_b,
     output logic [3:0] src_b,
     output logic set_pc,
@@ -14,7 +15,11 @@ module decode_coco_wrapper(
     output logic inc_pc,
     output logic [1:0] pc_src,
     output logic [2:0] cmp_b,
-    output logic [2:0] out_regs
+    output logic [2:0] out_regs,
+    output logic alu_en,
+    output logic sh_off_imm,
+    output logic [3:0] truth_table,
+    output logic [4:0] alu_op
 );
 
 decode dut(
@@ -23,8 +28,9 @@ decode dut(
     .ins(ins),
     .ins_en(ins_en),
     .ext(ext),
+    .imm_en(imm_en),
+    .arg_imm(arg_imm),
     .read_a(read_a),
-    .imm5_a(imm5_a),
     .arg_a(arg_a),
     .read_b(read_b),
     .src_b(src_b),
@@ -33,7 +39,11 @@ decode dut(
     .inc_pc(inc_pc),
     .pc_src(pc_src),
     .cmp_b(cmp_b),
-    .out_regs(out_regs)
+    .out_regs(out_regs),
+    .alu_en(alu_en),
+    .sh_off_imm(sh_off_imm),
+    .truth_table(truth_table),
+    .alu_op(alu_op)
 );
 
 initial begin

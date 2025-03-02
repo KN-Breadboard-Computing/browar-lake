@@ -70,13 +70,13 @@ initial begin
     
     bank0[65] = 8'hC6;
     bank1[65] = 8'h63;
-    bank2[65] = 8'hE6;
-    bank3[65] = 8'h67;
+    bank2[65] = 8'h18; // add r4, r6
+    bank3[65] = 8'h31;
 
-    bank0[66] = 8'hA6;
-    bank1[66] = 8'h65;
-    bank2[66] = 8'h46;
-    bank3[66] = 8'h62;
+    bank0[66] = 8'h19; // sub r4, r6
+    bank1[66] = 8'h31;
+    bank2[66] = 8'h30; // rol r4, 8
+    bank3[66] = 8'h35;
 end
 `endif
 

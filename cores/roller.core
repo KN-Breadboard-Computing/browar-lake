@@ -1,0 +1,39 @@
+CAPI=2:
+name: bbcomp:browarlake:roller:1.0.0
+description: Shift/Roll ALU datapath
+
+filesets:
+    src:
+        files:
+            - roller/src/roller.sv
+            - roller/src/mux8.sv
+            - roller/src/mux2x4.sv
+        file_type: systemVerilogSource
+    formal:
+        files:
+            - roller/formal/formal_tb.sv: { file_type: systemVerilogSource }
+            - roller/formal/roller.sby: { file_type: sbyConfigTemplate }
+
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: roller
+    lint:
+        <<: *default
+        description: Run verilator lint
+        flow: lint
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
+        parameters: []
+    formal:
+        <<: *default
+        description: Run formal verification
+        default_tool: symbiyosys
+        filesets_append:
+            - formal
+        tools:
+            symbiyosys:
+                tasknames: [ "formal" ]

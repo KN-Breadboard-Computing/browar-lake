@@ -1,9 +1,10 @@
 module read_coco_wrapper(
     input wire cpu_clk,
     input wire cpu_rst,
+    input wire imm_en,
+    input wire [4:0] arg_imm,
     input wire read_a,
-    input wire imm5_a,
-    input wire [4:0] arg_a,
+    input wire [3:0] arg_a,
     input wire read_b,
     input wire [3:0] arg_b,
     input wire [2:0] cmp_b,
@@ -11,6 +12,12 @@ module read_coco_wrapper(
     input wire pc_add,
     input wire pc_inc,
     input wire [1:0] pc_src,
+    input wire [1:0] en_regs,
+
+    input wire i_alu_en,
+    input wire [3:0] i_truth_table,
+    input wire [4:0] i_alu_op,
+    input wire sh_off_imm,
 
     input wire [15:0] reg_a_value,
     input wire [15:0] reg_b_value,
@@ -27,14 +34,20 @@ module read_coco_wrapper(
     output logic o_pc_set,
     output logic o_pc_add,
     output logic o_pc_inc,
-    output logic [30:0] pc
+    output logic [30:0] pc,
+
+    output logic o_alu_en,
+    output logic [3:0] o_truth_table,
+    output logic [4:0] o_alu_op,
+    output logic [3:0] sh_off
 );
 
 read dut(
     .cpu_clk(cpu_clk),
     .cpu_rst(cpu_rst),
+    .imm_en(imm_en),
+    .arg_imm(arg_imm),
     .read_a(read_a),
-    .imm5_a(imm5_a),
     .arg_a(arg_a),
     .read_b(read_b),
     .arg_b(arg_b),
@@ -43,6 +56,12 @@ read dut(
     .pc_add(pc_add),
     .pc_inc(pc_inc),
     .pc_src(pc_src),
+    .en_regs(en_regs),
+
+    .i_alu_en(i_alu_en),
+    .i_truth_table(i_truth_table),
+    .i_alu_op(i_alu_op),
+    .sh_off_imm(sh_off_imm),
 
     .reg_a_value(reg_a_value),
     .reg_b_value(reg_b_value),
@@ -59,7 +78,12 @@ read dut(
     .o_pc_set(o_pc_set),
     .o_pc_add(o_pc_add),
     .o_pc_inc(o_pc_inc),
-    .pc(pc)
+    .pc(pc),
+
+    .o_alu_en(o_alu_en),
+    .o_truth_table(o_truth_table),
+    .o_alu_op(o_alu_op),
+    .sh_off(sh_off)
 );
 
 initial begin
