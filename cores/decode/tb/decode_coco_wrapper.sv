@@ -19,7 +19,10 @@ module decode_coco_wrapper(
     output logic alu_en,
     output logic sh_off_imm,
     output logic [3:0] truth_table,
-    output logic [4:0] alu_op
+    output logic [4:0] alu_op,
+    output logic [3:0] dst,
+    output logic mem_en,
+    output logic mem_write
 );
 
 decode dut(
@@ -43,7 +46,10 @@ decode dut(
     .alu_en(alu_en),
     .sh_off_imm(sh_off_imm),
     .truth_table(truth_table),
-    .alu_op(alu_op)
+    .alu_op(alu_op),
+    .dst(dst),
+    .mem_en(mem_en),
+    .mem_write(mem_write)
 );
 
 initial begin

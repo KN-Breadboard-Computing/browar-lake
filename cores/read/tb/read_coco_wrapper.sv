@@ -19,6 +19,16 @@ module read_coco_wrapper(
     input wire [4:0] i_alu_op,
     input wire sh_off_imm,
 
+    input wire i_mem_en,
+    input wire i_mem_write,
+
+    input wire [15:0] exe_out,
+    input wire [3:0] exe_dst_reg,
+    input wire exe_en,
+    input wire [15:0] wb_out,
+    input wire [3:0] wb_dst_reg,
+    input wire wb_en,
+
     input wire [15:0] reg_a_value,
     input wire [15:0] reg_b_value,
     output logic reg_a_read,
@@ -39,7 +49,11 @@ module read_coco_wrapper(
     output logic o_alu_en,
     output logic [3:0] o_truth_table,
     output logic [4:0] o_alu_op,
-    output logic [3:0] sh_off
+    output logic [3:0] sh_off,
+
+    output logic o_mem_en,
+    output logic o_mem_write,
+    output logic [31:0] mem_addr
 );
 
 read dut(
@@ -63,6 +77,16 @@ read dut(
     .i_alu_op(i_alu_op),
     .sh_off_imm(sh_off_imm),
 
+    .i_mem_en(i_mem_en),
+    .i_mem_write(i_mem_write),
+    
+    .exe_out(exe_out),
+    .exe_dst_reg(exe_dst_reg),
+    .exe_en(exe_en),
+    .wb_out(wb_out),
+    .wb_dst_reg(wb_dst_reg),
+    .wb_en(wb_en),
+
     .reg_a_value(reg_a_value),
     .reg_b_value(reg_b_value),
     .reg_a_read(reg_a_read),
@@ -83,7 +107,11 @@ read dut(
     .o_alu_en(o_alu_en),
     .o_truth_table(o_truth_table),
     .o_alu_op(o_alu_op),
-    .sh_off(sh_off)
+    .sh_off(sh_off),
+    
+    .o_mem_en(o_mem_en),
+    .o_mem_write(o_mem_write),
+    .mem_addr(mem_addr)
 );
 
 initial begin

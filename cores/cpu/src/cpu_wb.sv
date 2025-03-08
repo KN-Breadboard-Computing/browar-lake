@@ -20,21 +20,22 @@ wire ins_res;
 wire fetch_stall;
 
 wire [31:0] mem_addr;
-wire [7:0] data_in;
-wire [7:0] data_out;
+wire [7:0] mem_data_in;
+wire [7:0] mem_data_out;
+wire mem_en;
 wire mem_req;
 wire mem_we;
 wire mem_res;
-wire mmu_stall;
+wire mem_stall;
 
 mru mru(
     .ins_en(ins_req),
     .ins_addr({ ins_addr, 1'b0 }),
     .ins_ext(1'b1),
-    .mem_en(1'b0),
+    .mem_en(mem_en),
     .mem_addr(mem_addr),
     .mem_we(mem_we),
-    .mem_data_i(data_in),
+    .mem_data_i(mem_data_in),
     .clk_i(clk_i),
     .dat_i(dat_i),
     .rst_i(rst_i),
@@ -42,9 +43,9 @@ mru mru(
     .ins_stl(fetch_stall),
     .ins_ack(ins_res),
     .ins_data(ins_data),
-    .mem_stl(mmu_stall),
+    .mem_stl(mem_stall),
     .mem_ack(mem_res),
-    .mem_data_o(data_out),
+    .mem_data_o(mem_data_out),
     .dat_o(dat_o),
     .adr_o(adr_o),
     .cyc_o(cyc_o),
@@ -93,9 +94,12 @@ wire [1:0] sig_en_regs;
 wire [2:0] sig_cmp_b;
 wire [3:0] sig_arg_a;
 wire [3:0] sig_arg_b;
+wire [3:0] sig_dst;
 wire [3:0] sig_truth_table;
 wire [4:0] sig_arg_imm;
 wire [4:0] sig_alu_op;
+wire sig_mem_en;
+wire sig_mem_write;
 
 decode decode(
     .cpu_clk(cpu_clk),
@@ -118,19 +122,30 @@ decode decode(
     .alu_en(sig_alu_en),
     .sh_off_imm(sig_sh_off_imm),
     .truth_table(sig_truth_table),
-    .alu_op(sig_alu_op)
+    .alu_op(sig_alu_op),
+    .dst(sig_dst),
+    .mem_en(sig_mem_en),
+    .mem_write(sig_mem_write)
 );
 
 wire exe_a_en;
 wire exe_b_en;
 wire [15:0] exe_a_bus;
 wire [15:0] exe_b_bus;
+wire [15:0] exe_out;
+wire [3:0] exe_dst;
+wire exe_out_en;
 wire reg_a_read;
 wire reg_b_read;
 wire [3:0] reg_a;
 wire [3:0] reg_b;
 wire [15:0] reg_a_out;
 wire [15:0] reg_b_out;
+wire [3:0] wb_dst;
+wire [15:0] wb_out;
+wire [3:0] alu_dst;
+wire wb_we;
+wire alu_en;
 
 read read(
     .cpu_clk(cpu_clk),
@@ -154,11 +169,22 @@ read read(
     .reg_a(reg_a),
     .reg_b_read(reg_b_read),
     .reg_b(reg_b),
+   
+    .exe_out(exe_out),
+    .exe_dst_reg(exe_dst),
+    .exe_en(exe_out_en),
+    .wb_out(wb_out),
+    .wb_dst_reg(wb_dst),
+    .wb_en(wb_we),
 
+    .i_dst(sig_dst),
     .i_alu_en(sig_alu_en),
     .i_truth_table(sig_truth_table),
     .i_alu_op(sig_alu_op),
     .sh_off_imm(sig_sh_off_imm),
+
+    .i_mem_en(sig_mem_en),
+    .i_mem_write(sig_mem_write),
 
     .src_a_en(exe_a_en),
     .src_a(exe_a_bus),
@@ -170,10 +196,15 @@ read read(
     .o_pc_inc(pc_inc),
     .pc(pc_bus),
 
+    .o_dst(alu_dst),
     .o_alu_en(alu_en),
     .o_truth_table(alu_truth_table),
     .o_alu_op(alu_op),
-    .sh_off(alu_sh_off)
+    .sh_off(alu_sh_off),
+
+    .o_mem_en(mem_en),
+    .o_mem_write(mem_we),
+    .mem_addr(mem_addr)
 );
 
 regs regs(
@@ -183,28 +214,66 @@ regs regs(
     .src_a(reg_a),
     .src_b_en(reg_b_read),
     .src_b(reg_b),
-    .we(1'b0),
-    .src_w(4'b0),
-    .val(16'h0000),
+    .we(wb_we),
+    .src_w(wb_dst),
+    .val(wb_out),
     .a_out(reg_a_out),
     .b_out(reg_b_out)
 );
 
-wire alu_en;
 wire [3:0] alu_sh_off;
 wire [3:0] alu_truth_table;
 wire [4:0] alu_op;
+wire [3:0] alu_dst_reg;
 wire [15:0] alu_out;
+wire alu_out_en;
 
 alu alu(
     .a(exe_a_bus),
     .b(exe_b_bus),
+    .i_dst(alu_dst),
+    .en(alu_en),
     .sh_off(alu_sh_off),
     .truth_table(alu_truth_table),
     .op(alu_op),
     .flag_carry(),
     .flag_overflow(),
-    .out(alu_out)
+    .out(alu_out),
+    .out_en(alu_out_en),
+    .o_dst(alu_dst_reg)
+);
+
+wire [15:0] mau_out;
+wire [3:0] mau_dst_reg;
+wire mau_out_en;
+
+mau mau(
+    .cpu_clk(cpu_clk),
+    .cpu_rst(cpu_rst),
+    .data_in(mem_data_out),
+    .en(mem_en),
+    .mem_res(mem_res),
+    .out_en(mau_out_en),
+    .i_dst(alu_dst),
+    .out(mau_out),
+    .o_dst(mau_dst_reg)
+);
+
+write write(
+    .cpu_clk(cpu_clk),
+    .cpu_rst(cpu_rst),
+    .alu_en(alu_out_en),
+    .alu_out(alu_out),
+    .alu_dst(alu_dst_reg),
+    .mau_en(mau_out_en),
+    .mau_out(mau_out),
+    .mau_dst(mau_dst_reg),
+    .exe_en(exe_out_en),
+    .exe_out(exe_out),
+    .exe_dst(exe_dst),
+    .out(wb_out),
+    .dst(wb_dst),
+    .we(wb_we)
 );
 
 endmodule

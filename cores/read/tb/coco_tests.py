@@ -269,6 +269,8 @@ async def add_works(dut):
     dut.pc_add.value = 0
     dut.pc_src.value = 0b00
     dut.en_regs.value = 0b11
+    dut.exe_en.value = 0
+    dut.wb_en.value = 0
     dut.reg_a_value.value = 0x001E
     dut.reg_b_value.value = 0x1E00
     dut.i_alu_en.value = 1
@@ -309,6 +311,8 @@ async def shlimm_works(dut):
     dut.pc_add.value = 0
     dut.pc_src.value = 0b00
     dut.en_regs.value = 0b11
+    dut.exe_en.value = 0
+    dut.wb_en.value = 0
     dut.reg_a_value.value = 0x0000
     dut.reg_b_value.value = 0x8811
     dut.i_alu_en.value = 1
@@ -332,3 +336,134 @@ async def shlimm_works(dut):
     assert dut.o_truth_table.value == 0b1110
     assert dut.o_alu_op.value == 0b00001
     assert dut.sh_off == 0xF
+
+@cocotb.test
+async def exe_forwarding_works(dut):
+    await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    dut.cpu_rst.value = 0
+    dut.imm_en.value = 0
+    dut.arg_imm.value = 0x00
+    dut.read_a.value = 1
+    dut.arg_a.value = 0x5
+    dut.read_b.value = 1
+    dut.arg_b.value = 0x7
+    dut.cmp_b.value = 0b000
+    dut.pc_set.value = 0
+    dut.pc_inc.value = 0
+    dut.pc_add.value = 0
+    dut.pc_src.value = 0b00
+    dut.en_regs.value = 0b11
+    dut.exe_en.value = 1
+    dut.exe_out.value = 0x0240
+    dut.exe_dst_reg.value = 0x5
+    dut.wb_en.value = 0
+    dut.reg_a_value.value = 0x2004
+    dut.reg_b_value.value = 0x8811
+    dut.i_alu_en.value = 1
+    dut.i_truth_table.value = 0b0000
+    dut.i_alu_op.value = 0b00001
+    dut.sh_off_imm.value = 0
+    await ReadOnly()
+    assert dut.reg_a_read.value == 1
+    assert dut.reg_b_read.value == 1
+    assert dut.reg_a.value == 0x5
+    assert dut.reg_b.value == 0x7
+
+    await NextTimeStep()
+    await RisingEdge(dut.cpu_clk)
+    await ReadOnly()
+    assert dut.src_a.value == 0x0240
+    assert dut.src_a_en.value == 1
+    assert dut.src_b.value == 0x8811
+    assert dut.src_b_en.value == 1
+    assert dut.o_alu_en.value == 1
+    assert dut.o_truth_table.value == 0b0000
+    assert dut.o_alu_op.value == 0b00001
+
+@cocotb.test
+async def wb_forwarding_works(dut):
+    await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    dut.cpu_rst.value = 0
+    dut.imm_en.value = 0
+    dut.arg_imm.value = 0x00
+    dut.read_a.value = 1
+    dut.arg_a.value = 0x5
+    dut.read_b.value = 1
+    dut.arg_b.value = 0x7
+    dut.cmp_b.value = 0b000
+    dut.pc_set.value = 0
+    dut.pc_inc.value = 0
+    dut.pc_add.value = 0
+    dut.pc_src.value = 0b00
+    dut.en_regs.value = 0b11
+    dut.exe_en.value = 1
+    dut.exe_out.value = 0x0240
+    dut.exe_dst_reg.value = 0x6
+    dut.wb_en.value = 1
+    dut.wb_out.value = 0x0F70
+    dut.wb_dst_reg.value = 0x7
+    dut.reg_a_value.value = 0x2004
+    dut.reg_b_value.value = 0x8811
+    dut.i_alu_en.value = 1
+    dut.i_truth_table.value = 0b0000
+    dut.i_alu_op.value = 0b00001
+    dut.sh_off_imm.value = 0
+    await ReadOnly()
+    assert dut.reg_a_read.value == 1
+    assert dut.reg_b_read.value == 1
+    assert dut.reg_a.value == 0x5
+    assert dut.reg_b.value == 0x7
+
+    await NextTimeStep()
+    await RisingEdge(dut.cpu_clk)
+    await ReadOnly()
+    assert dut.src_a.value == 0x2004
+    assert dut.src_a_en.value == 1
+    assert dut.src_b.value == 0x0F70
+    assert dut.src_b_en.value == 1
+    assert dut.o_alu_en.value == 1
+    assert dut.o_truth_table.value == 0b0000
+    assert dut.o_alu_op.value == 0b00001
+
+@cocotb.test
+async def read_works(dut):
+    await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    dut.cpu_rst.value = 0
+    dut.imm_en.value = 0
+    dut.arg_imm.value = 0x00
+    dut.read_a.value = 1
+    dut.arg_a.value = 0x9
+    dut.read_b.value = 1
+    dut.arg_b.value = 0x4
+    dut.cmp_b.value = 0b000 # bz
+    dut.pc_set.value = 0
+    dut.pc_inc.value = 0
+    dut.pc_add.value = 0
+    dut.pc_src.value = 0b00
+    dut.en_regs.value = 0b00
+    dut.exe_en.value = 0
+    dut.wb_en.value = 0
+    dut.reg_a_value.value = 0x8888
+    dut.reg_b_value.value = 0x1111
+    dut.i_alu_en.value = 0
+    dut.i_truth_table.value = 0b0000
+    dut.i_alu_op.value = 0b00000
+    dut.sh_off_imm.value = 0
+    dut.i_mem_en.value = 1
+    dut.i_mem_write.value = 1
+    await ReadOnly()
+    assert dut.reg_a_read.value == 1
+    assert dut.reg_b_read.value == 1
+    assert dut.reg_a.value == 0x9
+    assert dut.reg_b.value == 0x4
+
+    await NextTimeStep()
+    await RisingEdge(dut.cpu_clk)
+    await ReadOnly()
+    assert dut.o_alu_en.value == 0
+    assert dut.o_truth_table.value == 0b0000
+    assert dut.o_alu_op.value == 0b00000
+    assert dut.sh_off_imm.value == 0
+    assert dut.o_mem_en.value == 1
+    assert dut.o_mem_write.value == 1
+    assert dut.mem_addr == 0x11118888

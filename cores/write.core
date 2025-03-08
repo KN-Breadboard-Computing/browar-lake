@@ -1,0 +1,42 @@
+CAPI=2:
+name: bbcomp:browarlake:write:1.0.0
+description: Register Write Unit
+filesets:
+    src:
+        files:
+            - write/src/write.sv
+        file_type: systemVerilogSource
+
+    test:
+        files:
+            - write/tb/write_coco_wrapper.sv: { file_type: systemVerilogSource }
+            - write/tb/coco_tests.py: { file_type: user, copyto: . }
+targets:
+    default: &default
+        filesets:
+            - src
+        toplevel: write
+    test:
+        <<: *default
+        description: Run cocotb unit tests
+        flow: sim
+        flow_options:
+            tool: icarus
+            iverilog_options:
+                - -g2005-sv
+            cocotb_module: coco_tests
+            timescale: 1ns/1ns
+            vcs_options: [-timescale=1ns/1ns]
+        filesets_append:
+            - test
+        toplevel: write_coco_wrapper
+        parameters: []
+    lint:
+        <<: *default
+        description: Run verilator lint
+        flow: lint
+        flow_options:
+            tool: verilator
+            verilator_options:
+                - --lint-only
+        parameters: []
