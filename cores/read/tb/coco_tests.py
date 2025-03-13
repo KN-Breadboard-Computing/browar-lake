@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, NextTimeStep, ReadOnly, ReadWrite
+from cocotb.triggers import RisingEdge, NextTimeStep, ReadOnly, ReadWrite, FallingEdge
 
 @cocotb.test
 async def jmp_works(dut):
@@ -11,6 +11,8 @@ async def jmp_works(dut):
     dut.arg_a.value = 0x09
     dut.read_b.value = 1
     dut.arg_b.value = 0x0A
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b110
     dut.pc_set.value = 1
     dut.pc_add.value = 0
@@ -35,6 +37,8 @@ async def bn_works(dut):
     dut.arg_a.value = 0x00
     dut.read_b.value = 1
     dut.arg_b.value = 0x6
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b001
     dut.pc_set.value = 0
     dut.pc_add.value = 1
@@ -52,12 +56,16 @@ async def bn_works(dut):
 @cocotb.test
 async def bz_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
     dut.read_a.value = 1
     dut.arg_a.value = 0x09
     dut.read_b.value = 1
     dut.arg_b.value = 0x0A
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b001 # bz
     dut.pc_set.value = 0
     dut.pc_inc.value = 1
@@ -103,12 +111,16 @@ async def bz_works(dut):
 @cocotb.test
 async def bnz_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
     dut.read_a.value = 1
     dut.arg_a.value = 0x09
     dut.read_b.value = 1
     dut.arg_b.value = 0x0A
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b011
     dut.pc_set.value = 0
     dut.pc_inc.value = 1
@@ -154,12 +166,16 @@ async def bnz_works(dut):
 @cocotb.test
 async def bgez_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
     dut.read_a.value = 1
     dut.arg_a.value = 0x09
     dut.read_b.value = 1
     dut.arg_b.value = 0x0A
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b101 # gez
     dut.pc_set.value = 0
     dut.pc_inc.value = 1
@@ -205,12 +221,16 @@ async def bgez_works(dut):
 @cocotb.test
 async def blez_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
     dut.read_a.value = 1
     dut.arg_a.value = 0x09
     dut.read_b.value = 1
     dut.arg_b.value = 0x0A
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b111 # lez
     dut.pc_set.value = 0
     dut.pc_inc.value = 1
@@ -256,6 +276,8 @@ async def blez_works(dut):
 @cocotb.test
 async def add_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.cpu_rst.value = 0
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
@@ -263,6 +285,8 @@ async def add_works(dut):
     dut.arg_a.value = 0xA
     dut.read_b.value = 1
     dut.arg_b.value = 0x5
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b000 # bz
     dut.pc_set.value = 0
     dut.pc_inc.value = 0
@@ -298,6 +322,8 @@ async def add_works(dut):
 @cocotb.test
 async def shlimm_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.cpu_rst.value = 0
     dut.imm_en.value = 1
     dut.arg_imm.value = 0x0F
@@ -305,6 +331,8 @@ async def shlimm_works(dut):
     dut.arg_a.value = 0x0
     dut.read_b.value = 1
     dut.arg_b.value = 0x7
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b000 # bz
     dut.pc_set.value = 0
     dut.pc_inc.value = 0
@@ -340,6 +368,8 @@ async def shlimm_works(dut):
 @cocotb.test
 async def exe_forwarding_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.cpu_rst.value = 0
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
@@ -347,6 +377,8 @@ async def exe_forwarding_works(dut):
     dut.arg_a.value = 0x5
     dut.read_b.value = 1
     dut.arg_b.value = 0x7
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b000
     dut.pc_set.value = 0
     dut.pc_inc.value = 0
@@ -383,6 +415,8 @@ async def exe_forwarding_works(dut):
 @cocotb.test
 async def wb_forwarding_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.cpu_rst.value = 0
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
@@ -390,6 +424,8 @@ async def wb_forwarding_works(dut):
     dut.arg_a.value = 0x5
     dut.read_b.value = 1
     dut.arg_b.value = 0x7
+    dut.read_c.value = 0
+    dut.arg_c.value = 0x0
     dut.cmp_b.value = 0b000
     dut.pc_set.value = 0
     dut.pc_inc.value = 0
@@ -428,12 +464,16 @@ async def wb_forwarding_works(dut):
 @cocotb.test
 async def read_works(dut):
     await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
     dut.cpu_rst.value = 0
     dut.imm_en.value = 0
     dut.arg_imm.value = 0x00
     dut.read_a.value = 1
     dut.arg_a.value = 0x9
     dut.read_b.value = 1
+    dut.arg_c.value = 0x0
+    dut.read_c.value = 0
     dut.arg_b.value = 0x4
     dut.cmp_b.value = 0b000 # bz
     dut.pc_set.value = 0
@@ -467,3 +507,65 @@ async def read_works(dut):
     assert dut.o_mem_en.value == 1
     assert dut.o_mem_write.value == 1
     assert dut.mem_addr == 0x11118888
+
+@cocotb.test
+async def dobule_pump_works(dut):
+    await cocotb.start(Clock(dut.cpu_clk, 4, 'ns').start())
+    dut.cpu_rst.value = 1
+    await RisingEdge(dut.cpu_clk)
+    await RisingEdge(dut.cpu_clk)
+    await ReadWrite()
+    dut.cpu_rst.value = 0
+    dut.imm_en.value = 0
+    dut.arg_imm.value = 0x00
+    dut.read_a.value = 1
+    dut.arg_a.value = 0x8
+    dut.read_b.value = 1
+    dut.arg_c.value = 0xA
+    dut.read_c.value = 1
+    dut.arg_b.value = 0x4
+    dut.cmp_b.value = 0b000 # bz
+    dut.pc_set.value = 0
+    dut.pc_inc.value = 0
+    dut.pc_add.value = 0
+    dut.pc_src.value = 0b00
+    dut.en_regs.value = 0b00
+    dut.exe_en.value = 0
+    dut.wb_en.value = 0
+    dut.reg_a_value.value = 0xABBA
+    dut.reg_b_value.value = 0xDEAD
+    dut.i_alu_en.value = 0
+    dut.i_truth_table.value = 0b0000
+    dut.i_alu_op.value = 0b00000
+    dut.sh_off_imm.value = 0
+    dut.i_mem_en.value = 0
+    dut.i_mem_write.value = 0
+    await ReadOnly()
+    assert dut.reg_a_read.value == 1
+    assert dut.reg_b_read.value == 1
+    assert dut.dut.allow_read_c.value == 1
+    assert dut.reg_a.value == 0xA
+    assert dut.reg_b.value == 0x4
+
+    await NextTimeStep()
+    await FallingEdge(dut.cpu_clk)
+    await ReadWrite()
+    dut.reg_a_value.value = 0xBEEF
+
+    await ReadOnly()
+    assert dut.reg_a_read.value == 1
+    assert dut.reg_b_read.value == 1
+    assert dut.reg_a.value == 0x8
+    assert dut.reg_b.value == 0x4
+    assert dut.dut.allow_read_c == 0
+
+    await NextTimeStep()
+    await RisingEdge(dut.cpu_clk)
+    await ReadOnly()
+    assert dut.o_alu_en.value == 0
+    assert dut.o_truth_table.value == 0b0000
+    assert dut.o_alu_op.value == 0b00000
+    assert dut.sh_off_imm.value == 0
+    assert dut.o_mem_en.value == 0
+    assert dut.o_mem_write.value == 0
+    assert dut.mem_addr == 0xDEADBEEF

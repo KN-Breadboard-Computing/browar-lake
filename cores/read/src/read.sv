@@ -7,6 +7,8 @@ module read(
     input wire [3:0] arg_a,
     input wire read_b,
     input wire [3:0] arg_b,
+    input wire read_c,
+    input wire [3:0] arg_c,
     input wire [2:0] cmp_b,
     input wire pc_set,
     input wire pc_add,
@@ -61,15 +63,19 @@ module read(
 wire [15:0] a_bus;
 wire [15:0] b_bus;
 
+reg allow_read_c;
+reg buf_c_en;
+reg [15:0] buf_c;
+
+assign reg_a_read = read_a;
+assign reg_a = (read_c && allow_read_c) ? arg_c : arg_a[3:0];
+assign reg_b_read = read_b;
+assign reg_b = arg_b[3:0];
+
 assign a_bus = (exe_en && exe_dst_reg == reg_a) ? exe_out :
                ( wb_en &&  wb_dst_reg == reg_a) ? wb_out  : reg_a_value;
 assign b_bus = (exe_en && exe_dst_reg == reg_b) ? exe_out : 
                ( wb_en &&  wb_dst_reg == reg_b) ? wb_out  : reg_b_value;
-
-assign reg_a_read = read_a;
-assign reg_a = arg_a[3:0];
-assign reg_b_read = read_b;
-assign reg_b = arg_b[3:0];
 
 wire [14:0] pc_lo;
 wire [15:0] pc_hi;
@@ -88,10 +94,30 @@ assign o_pc_set = pc_set & (~cmp_b[0] | cond);
 assign o_pc_add = pc_add & (~cmp_b[0] | cond);
 assign o_pc_inc = pc_inc & (~cmp_b[0] | ~cond);
 
+always_ff @(cpu_clk) begin
+    if (cpu_clk) allow_read_c <= 1'b1;
+    else allow_read_c <= 1'b0;
+end
+
+always_ff @(negedge cpu_clk) begin
+    if (!cpu_rst) begin
+        if (read_c) begin
+            buf_c <= a_bus;
+            buf_c_en <= 1'b1;
+        end else begin
+            buf_c_en <= 1'b0;
+        end
+    end
+end
+
 always_ff @(posedge cpu_clk) begin
     if (!cpu_rst) begin
         if (read_a) begin
             src_a <= a_bus;
+            src_a_en <= en_regs[0];
+        end
+        if (read_c) begin
+            src_a <= buf_c;
             src_a_en <= en_regs[0];
         end
         if (read_b) begin

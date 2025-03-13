@@ -52,69 +52,71 @@ reg [15:0] sp_high_a, sp_high_b;
 `endif
 
 always_ff @(posedge cpu_clk) begin
-    case (src_w)
-        4'b0000: begin end
-        4'b0001: begin
-            r1_a <= val;
-            r1_b <= val;
-        end
-        4'b0010: begin
-            r2_a <= val;
-            r2_b <= val;
-        end
-        4'b0011: begin
-            r3_a <= val;
-            r3_b <= val;
-        end
-        4'b0100: begin
-            r4_a <= val;
-            r4_b <= val;
-        end
-        4'b0101: begin
-            r5_a <= val;
-            r5_b <= val;
-        end
-        4'b0110: begin
-            r6_a <= val;
-            r6_b <= val;
-        end
-        4'b0111: begin
-            r7_a <= val;
-            r7_b <= val;
-        end
-        4'b1000: begin
-            r8_a <= val;
-            r8_b <= val;
-        end
-        4'b1001: begin
-            r9_a <= val;
-            r9_b <= val;
-        end
-        4'b1010: begin
-            ra_a <= val;
-            ra_b <= val;
-        end
-        4'b1011: begin
-            rb_a <= val;
-            rb_b <= val;
-        end
-        4'b1100: begin
-            rc_a <= val;
-            rc_b <= val;
-        end
-        4'b1101: begin
-            rd_a <= val;
-            rd_b <= val;
-        end
-        4'b1110: begin
-            sp_low_a <= val;
-            sp_low_b <= val;
-        end
-        4'b1111: begin
-            sp_high_a <= val;
-            sp_high_b <= val;
-        end
-    endcase
+    if (we) begin
+        case (src_w)
+            4'b0000: begin end
+            4'b0001: begin
+                r1_a <= val;
+                r1_b <= val;
+            end
+            4'b0010: begin
+                r2_a <= val;
+                r2_b <= val;
+            end
+            4'b0011: begin
+                r3_a <= val;
+                r3_b <= val;
+            end
+            4'b0100: begin
+                r4_a <= val;
+                r4_b <= val;
+            end
+            4'b0101: begin
+                r5_a <= val;
+                r5_b <= val;
+            end
+            4'b0110: begin
+                r6_a <= val;
+                r6_b <= val;
+            end
+            4'b0111: begin
+                r7_a <= val;
+                r7_b <= val;
+            end
+            4'b1000: begin
+                r8_a <= val;
+                r8_b <= val;
+            end
+            4'b1001: begin
+                r9_a <= val;
+                r9_b <= val;
+            end
+            4'b1010: begin
+                ra_a <= val;
+                ra_b <= val;
+            end
+            4'b1011: begin
+                rb_a <= val;
+                rb_b <= val;
+            end
+            4'b1100: begin
+                rc_a <= val;
+                rc_b <= val;
+            end
+            4'b1101: begin
+                rd_a <= val;
+                rd_b <= val;
+            end
+            4'b1110: begin
+                sp_low_a <= val;
+                sp_low_b <= val;
+            end
+            4'b1111: begin
+                sp_high_a <= val;
+                sp_high_b <= val;
+            end
+        endcase
+    end
 end
 
 logic [15:0] a_bus;

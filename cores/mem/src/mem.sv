@@ -77,6 +77,36 @@ initial begin
     bank1[66] = 8'h31;
     bank2[66] = 8'h30; // rol r4, 8
     bank3[66] = 8'h35;
+
+    bank0[67] = 8'hAF; // ld3 rA, r5, r7
+    bank1[67] = 8'h12;
+    bank2[67] = 8'h00;
+    bank3[67] = 8'h00;
+
+    bank0[68] = 8'h2F; // st3 r4, r5, r7
+    bank1[68] = 8'h15;
+    bank2[68] = 8'h00; // ld3 r4, r5, r7
+    bank3[68] = 8'h00; 
+
+    bank0[69] = 8'hAF;
+    bank1[69] = 8'h11;
+    bank2[69] = 8'h00;
+    bank3[69] = 8'h00;
+
+    bank0[70] = 8'h00;
+    bank1[70] = 8'h00;
+    bank2[70] = 8'h00;
+    bank3[70] = 8'h00;
+
+    bank0[71] = 8'h98; // add r4, r4
+    bank1[71] = 8'h31;
+    bank2[71] = 8'h00;
+    bank3[71] = 8'h00;
+
+    bank0[80] = 8'h55;
+    bank1[80] = 8'h66;
+    bank2[80] = 8'h77;
+    bank3[80] = 8'h88;
 end
 `endif
 

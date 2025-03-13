@@ -12,6 +12,8 @@ module decode(
     output logic [3:0] arg_a,
     output logic read_b,
     output logic [3:0] src_b,
+    output logic read_c,
+    output logic [3:0] src_c,
     output logic [1:0] pc_src,
     output logic set_pc,
     output logic add_pc,
@@ -45,6 +47,8 @@ always_ff @(posedge cpu_clk) begin
         read_a <= 1'b0;
         src_b <= 4'h0;
         read_b <= 1'b0;
+        src_c <= 4'h0;
+        read_c <= 1'b0;
         set_pc <= 1'b0;
         add_pc <= 1'b0;
         inc_pc <= 1'b0;
@@ -67,6 +71,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b0;
                 src_b <= 4'h0;
                 read_b <= 1'b0;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -88,6 +94,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b1;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -109,6 +117,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b0;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b1;
                 inc_pc <= 1'b1;
@@ -130,6 +140,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b1;
                 inc_pc <= 1'b1;
@@ -151,6 +163,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -172,6 +186,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -193,6 +209,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= `REG_B(ins);
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -214,6 +232,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b1;
                 src_b <= { 1'b0, `REG_B3(ins) };
                 read_b <= 1'b1;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;
@@ -228,6 +248,29 @@ always_ff @(posedge cpu_clk) begin
                 mem_en <= 1'b1;
                 mem_write <= 1'b0;
             end
+            `OPCODE_ST3: begin
+                imm_en <= 1'b0;
+                arg_imm <= 5'b00000;
+                arg_a <= { 1'b0, `REG_A3(ins) };
+                read_a <= 1'b1;
+                src_b <= { 1'b0, `REG_B3(ins) };
+                read_b <= 1'b1;
+                src_c <= `REG_DST(ins);
+                read_c <= 1'b1;
+                set_pc <= 1'b0;
+                add_pc <= 1'b0;
+                inc_pc <= 1'b0;
+                cmp_b <= 3'b0;
+                pc_src <= 2'b00;
+                out_regs <= 2'b00;
+                alu_en <= 1'b0;
+                sh_off_imm <= 1'b0;
+                truth_table <= 4'b0000;
+                alu_op <= 5'b00000;
+                dst <= 4'h0;
+                mem_en <= 1'b1;
+                mem_write <= 1'b1;
+            end
             default: begin
                 imm_en <= 1'b0;
                 arg_imm <= 5'b00000;
@@ -235,6 +278,8 @@ always_ff @(posedge cpu_clk) begin
                 read_a <= 1'b0;
                 src_b <= 4'h0;
                 read_b <= 1'b0;
+                src_c <= 4'h0;
+                read_c <= 1'b0;
                 set_pc <= 1'b0;
                 add_pc <= 1'b0;
                 inc_pc <= 1'b0;

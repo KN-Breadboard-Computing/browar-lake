@@ -83,6 +83,7 @@ fetch fetch(
 wire sig_read_a;
 wire sig_imm5_a;
 wire sig_read_b;
+wire sig_read_c;
 wire sig_pc_set;
 wire sig_pc_add;
 wire sig_pc_inc;
@@ -94,6 +95,7 @@ wire [1:0] sig_en_regs;
 wire [2:0] sig_cmp_b;
 wire [3:0] sig_arg_a;
 wire [3:0] sig_arg_b;
+wire [3:0] sig_arg_c;
 wire [3:0] sig_dst;
 wire [3:0] sig_truth_table;
 wire [4:0] sig_arg_imm;
@@ -113,6 +115,8 @@ decode decode(
     .arg_a(sig_arg_a),
     .read_b(sig_read_b),
     .src_b(sig_arg_b),
+    .read_c(sig_read_c),
+    .src_c(sig_arg_c),
     .pc_src(sig_pc_src),
     .set_pc(sig_pc_set),
     .add_pc(sig_pc_add),
@@ -156,6 +160,8 @@ read read(
     .arg_a(sig_arg_a),
     .read_b(sig_read_b),
     .arg_b(sig_arg_b),
+    .read_c(sig_read_c),
+    .arg_c(sig_arg_c),
     .cmp_b(sig_cmp_b),
     .pc_set(sig_pc_set),
     .pc_add(sig_pc_add),
@@ -250,8 +256,11 @@ wire mau_out_en;
 mau mau(
     .cpu_clk(cpu_clk),
     .cpu_rst(cpu_rst),
+    .write_data(exe_a_bus),
     .data_in(mem_data_out),
+    .data_out(mem_data_in),
     .en(mem_en),
+    .we(mem_we),
     .mem_res(mem_res),
     .out_en(mau_out_en),
     .i_dst(alu_dst),
